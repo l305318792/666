@@ -1,3 +1,7 @@
+DROP DATABASE IF EXISTS `ry-vue`;
+CREATE DATABASE `ry-vue` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `ry-vue`;
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -162,7 +166,7 @@ create table sys_user (
     update_time       datetime                                   comment '更新时间',
     remark            varchar(500)    default null               comment '备注',
     primary key (user_id)
-) engine=innodb comment = '用户信息表';
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_general_ci comment = '用户信息表';
 
 -- ----------------------------
 -- 初始化-用户信息表数据
@@ -224,15 +228,22 @@ create table sys_role (
     update_time          datetime                                   comment '更新时间',
     remark               varchar(500)    default null               comment '备注',
     primary key (role_id)
-) engine=innodb comment = '角色信息表';
+) engine=innodb default charset=utf8mb4 collate=utf8mb4_general_ci comment = '角色信息表';
 
 -- ----------------------------
 -- 初始化-角色信息表数据
 -- ----------------------------
-insert into sys_role values('1', '000000', '超级管理员', 'admin',  1, 1, 1, 1, 1, 1, '0', '0', 103, 1, now(), null, null, '超级管理员');
-insert into sys_role values('2', '000000', '普通角色',   'common', 2, 1, 1, 1, 1, 0, '0', '0', 103, 1, now(), null, null, '普通角色');
-insert into sys_role values('3', '000000', '本部门及以下', 'test',   3, 3, 1, 1, 1, 0, '0', '0', 103, 1, now(), null, null, '本部门及以下');
-insert into sys_role values('4', '000000', '仅本人',      'test1',  4, 4, 1, 1, 1, 0, '0', '0', 103, 1, now(), null, null, '仅本人');
+insert into sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_dept, create_by, create_time, update_by, update_time, remark) 
+values ('1', '000000', '超级管理员', 'admin',  1, '1', 1, 1, '0', '0', 103, 1, now(), null, null, '超级管理员');
+
+insert into sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_dept, create_by, create_time, update_by, update_time, remark)
+values ('2', '000000', '普通角色',   'common', 2, '2', 1, 1, '0', '0', 103, 1, now(), null, null, '普通角色');
+
+insert into sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_dept, create_by, create_time, update_by, update_time, remark)
+values ('3', '000000', '本部门及以下', 'test',   3, '4', 1, 1, '0', '0', 103, 1, now(), null, null, '本部门及以下');
+
+insert into sys_role (role_id, tenant_id, role_name, role_key, role_sort, data_scope, menu_check_strictly, dept_check_strictly, status, del_flag, create_dept, create_by, create_time, update_by, update_time, remark)
+values ('4', '000000', '仅本人',      'test1',  4, '5', 1, 1, '0', '0', 103, 1, now(), null, null, '仅本人');
 
 -- ----------------------------
 -- 5、菜单权限表
