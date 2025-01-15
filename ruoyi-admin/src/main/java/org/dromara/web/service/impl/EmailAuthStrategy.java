@@ -31,9 +31,11 @@ import org.dromara.web.service.SysLoginService;
 import org.springframework.stereotype.Service;
 
 /**
- * 邮件认证策略
+ * 邮箱认证策略实现
+ * 实现基于邮箱验证码的认证方式，包括验证码校验、登录状态处理等功能
  *
  * @author Michelle.Chung
+ * @since 5.2.3
  */
 @Slf4j
 @Service("email" + IAuthStrategy.BASE_NAME)
@@ -43,6 +45,16 @@ public class EmailAuthStrategy implements IAuthStrategy {
     private final SysLoginService loginService;
     private final SysUserMapper userMapper;
 
+    /**
+     * 邮箱验证码登录认证
+     * 实现基于邮箱验证码的登录认证，包括邮箱验证、验证码校验、登录状态处理等
+     *
+     * @param body   登录信息字符串
+     * @param client 授权管理视图对象
+     * @return 登录验证信息
+     * @throws org.dromara.common.core.exception.user.UserException 用户不存在、被禁用等异常
+     * @throws org.dromara.common.core.exception.user.CaptchaExpireException 验证码过期异常
+     */
     @Override
     public LoginVo login(String body, SysClientVo client) {
         EmailLoginBody loginBody = JsonUtils.parseObject(body, EmailLoginBody.class);
@@ -77,6 +89,12 @@ public class EmailAuthStrategy implements IAuthStrategy {
 
     /**
      * 校验邮箱验证码
+     * 验证用户输入的邮箱验证码是否正确
+     *
+     * @param tenantId  租户ID
+     * @param email     邮箱地址
+     * @param emailCode 邮箱验证码
+     * @return true表示验证通过，false表示验证失败
      */
     private boolean validateEmailCode(String tenantId, String email, String emailCode) {
         String code = RedisUtils.getCacheObject(GlobalConstants.CAPTCHA_CODE_KEY + email);
@@ -87,6 +105,14 @@ public class EmailAuthStrategy implements IAuthStrategy {
         return code.equals(emailCode);
     }
 
+    /**
+     * 根据邮箱查询用户
+     * 查询指定邮箱地址对应的用户信息
+     *
+     * @param email 邮箱地址
+     * @return 用户信息对象
+     * @throws org.dromara.common.core.exception.user.UserException 用户不存在或被禁用时抛出异常
+     */
     private SysUserVo loadUserByEmail(String email) {
         SysUserVo user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getEmail, email));
         if (ObjectUtil.isNull(user)) {

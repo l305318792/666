@@ -52,9 +52,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 认证
+ * 认证控制器
+ * 处理用户认证相关的请求，包括登录、注册、退出等操作
  *
  * @author Lion Li
+ * @since 5.2.3
  */
 @Slf4j
 @SaIgnore
@@ -72,12 +74,13 @@ public class AuthController {
     private final ISysClientService clientService;
     private final ScheduledExecutorService scheduledExecutorService;
 
-
     /**
-     * 登录方法
+     * 用户登录
      *
-     * @param body 登录信息
-     * @return 结果
+     * @param body 登录信息JSON字符串，包含用户名、密码等认证信息
+     * @return 登录结果，包含token等信息
+     * @throws org.dromara.common.core.exception.user.UserException 用户不存在、被禁用等异常
+     * @throws org.dromara.common.core.exception.ServiceException 业务异常
      */
     @ApiEncrypt
     @PostMapping("/login")
@@ -113,8 +116,10 @@ public class AuthController {
     /**
      * 第三方登录请求
      *
-     * @param source 登录来源
-     * @return 结果
+     * @param source 第三方平台来源
+     * @param tenantId 租户ID
+     * @param domain 域名
+     * @return 第三方平台授权URL
      */
     @GetMapping("/binding/{source}")
     public R<String> authBinding(@PathVariable("source") String source,
@@ -133,10 +138,10 @@ public class AuthController {
     }
 
     /**
-     * 第三方登录回调业务处理 绑定授权
+     * 第三方登录回调处理
      *
-     * @param loginBody 请求体
-     * @return 结果
+     * @param loginBody 第三方登录信息
+     * @return 处理结果
      */
     @PostMapping("/social/callback")
     public R<Void> socialCallback(@RequestBody SocialLoginBody loginBody) {
@@ -153,11 +158,11 @@ public class AuthController {
         return R.ok();
     }
 
-
     /**
-     * 取消授权
+     * 取消第三方账号授权
      *
-     * @param socialId socialId
+     * @param socialId 社交账号ID
+     * @return 操作结果
      */
     @DeleteMapping(value = "/unlock/{socialId}")
     public R<Void> unlockSocial(@PathVariable Long socialId) {
@@ -165,9 +170,10 @@ public class AuthController {
         return rows ? R.ok() : R.fail("取消授权失败");
     }
 
-
     /**
-     * 退出登录
+     * 用户退出登录
+     *
+     * @return 退出结果
      */
     @PostMapping("/logout")
     public R<Void> logout() {
@@ -177,6 +183,10 @@ public class AuthController {
 
     /**
      * 用户注册
+     *
+     * @param user 注册用户信息
+     * @return 注册结果
+     * @throws org.dromara.common.core.exception.ServiceException 注册功能未开启等异常
      */
     @ApiEncrypt
     @PostMapping("/register")
@@ -189,9 +199,11 @@ public class AuthController {
     }
 
     /**
-     * 登录页面租户下拉框
+     * 获取登录页面的租户列表
      *
-     * @return 租户列表
+     * @param request HTTP请求对象
+     * @return 租户列表信息
+     * @throws Exception 获取租户信息异常
      */
     @GetMapping("/tenant/list")
     public R<LoginTenantVo> tenantList(HttpServletRequest request) throws Exception {

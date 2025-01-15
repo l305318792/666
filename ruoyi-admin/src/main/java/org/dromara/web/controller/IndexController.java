@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 首页
+ * 首页控制器
+ * 处理系统首页相关的请求，提供系统基础信息
  *
  * @author Lion Li
+ * @since 5.2.3
  */
 @SaIgnore
 @RequiredArgsConstructor
@@ -23,7 +25,9 @@ public class IndexController {
     private final RuoYiConfig ruoyiConfig;
 
     /**
-     * 访问首页，提示语
+     * 访问系统首页
+     * 
+     * @return 欢迎信息，包含系统名称和版本号
      */
     @GetMapping("/")
     public String index() {

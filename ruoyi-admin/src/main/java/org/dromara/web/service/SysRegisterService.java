@@ -25,9 +25,11 @@ import org.dromara.system.service.ISysUserService;
 import org.springframework.stereotype.Service;
 
 /**
- * 注册校验方法
+ * 用户注册服务
+ * 处理用户注册相关的业务逻辑，包括注册信息校验、验证码校验等
  *
  * @author Lion Li
+ * @since 5.2.3
  */
 @RequiredArgsConstructor
 @Service
@@ -38,7 +40,13 @@ public class SysRegisterService {
     private final CaptchaProperties captchaProperties;
 
     /**
-     * 注册
+     * 用户注册
+     * 处理用户注册请求，包括用户信息验证、验证码校验、用户信息保存等
+     *
+     * @param registerBody 注册信息对象
+     * @throws org.dromara.common.core.exception.user.UserException 用户已存在、注册失败等异常
+     * @throws org.dromara.common.core.exception.user.CaptchaException 验证码错误异常
+     * @throws org.dromara.common.core.exception.user.CaptchaExpireException 验证码过期异常
      */
     public void register(RegisterBody registerBody) {
         String tenantId = registerBody.getTenantId();
@@ -74,10 +82,14 @@ public class SysRegisterService {
 
     /**
      * 校验验证码
+     * 验证用户输入的验证码是否正确
      *
+     * @param tenantId 租户ID
      * @param username 用户名
      * @param code     验证码
      * @param uuid     唯一标识
+     * @throws org.dromara.common.core.exception.user.CaptchaException 验证码错误异常
+     * @throws org.dromara.common.core.exception.user.CaptchaExpireException 验证码过期异常
      */
     public void validateCaptcha(String tenantId, String username, String code, String uuid) {
         String verifyKey = GlobalConstants.CAPTCHA_CODE_KEY + StringUtils.blankToDefault(uuid, "");
@@ -94,13 +106,13 @@ public class SysRegisterService {
     }
 
     /**
-     * 记录登录信息
+     * 记录注册信息
+     * 记录用户注册相关的日志信息
      *
      * @param tenantId 租户ID
      * @param username 用户名
      * @param status   状态
      * @param message  消息内容
-     * @return
      */
     private void recordLogininfor(String tenantId, String username, String status, String message) {
         LogininforEvent logininforEvent = new LogininforEvent();

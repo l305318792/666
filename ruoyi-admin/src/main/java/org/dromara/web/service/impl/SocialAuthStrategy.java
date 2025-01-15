@@ -37,9 +37,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 第三方授权策略
+ * 社交认证策略实现
+ * 实现基于第三方平台的认证方式，支持多种社交平台的授权登录
  *
  * @author thiszhc is 三三
+ * @since 5.2.3
  */
 @Slf4j
 @Service("social" + IAuthStrategy.BASE_NAME)
@@ -52,10 +54,13 @@ public class SocialAuthStrategy implements IAuthStrategy {
     private final SysLoginService loginService;
 
     /**
-     * 登录-第三方授权登录
+     * 社交平台登录认证
+     * 实现基于第三方平台的登录认证，包括平台授权、用户信息获取、登录状态处理等
      *
-     * @param body     登录信息
-     * @param client   客户端信息
+     * @param body   登录信息字符串
+     * @param client 授权管理视图对象
+     * @return 登录验证信息
+     * @throws org.dromara.common.core.exception.ServiceException 授权失败、未绑定账号等异常
      */
     @Override
     public LoginVo login(String body, SysClientVo client) {
@@ -116,6 +121,14 @@ public class SocialAuthStrategy implements IAuthStrategy {
         return loginVo;
     }
 
+    /**
+     * 根据用户ID查询用户
+     * 查询指定用户ID对应的用户信息
+     *
+     * @param userId 用户ID
+     * @return 用户信息对象
+     * @throws org.dromara.common.core.exception.user.UserException 用户不存在或被禁用时抛出异常
+     */
     private SysUserVo loadUser(Long userId) {
         SysUserVo user = userMapper.selectVoById(userId);
         if (ObjectUtil.isNull(user)) {

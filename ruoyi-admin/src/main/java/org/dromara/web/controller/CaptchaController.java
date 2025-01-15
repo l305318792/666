@@ -36,9 +36,11 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 
 /**
- * 验证码操作处理
+ * 验证码控制器
+ * 处理系统验证码的生成、校验等操作，支持多种验证码类型
  *
  * @author Lion Li
+ * @since 5.2.3
  */
 @SaIgnore
 @Slf4j
@@ -51,9 +53,12 @@ public class CaptchaController {
     private final MailProperties mailProperties;
 
     /**
-     * 短信验证码
-     *
-     * @param phonenumber 用户手机号
+     * 获取短信验证码
+     * 
+     * @param phonenumber 用户手机号码
+     * @return 发送结果
+     * @throws org.dromara.common.core.exception.ServiceException 发送异常
+     * @see org.dromara.common.ratelimiter.annotation.RateLimiter 限流注解
      */
     @RateLimiter(key = "#phonenumber", time = 60, count = 1)
     @GetMapping("/resource/sms/code")

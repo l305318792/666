@@ -40,9 +40,11 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * 登录校验方法
+ * 系统登录服务
+ * 处理用户登录、登出、登录信息记录等操作，支持多种登录方式
  *
  * @author Lion Li
+ * @since 5.2.3
  */
 @RequiredArgsConstructor
 @Slf4j
@@ -62,11 +64,13 @@ public class SysLoginService {
     private final ISysDeptService deptService;
     private final SysUserMapper userMapper;
 
-
     /**
      * 绑定第三方用户
+     * 将第三方平台用户信息与系统用户进行绑定
      *
-     * @param authUserData 授权响应实体
+     * @param authUserData 第三方授权用户数据
+     * @throws org.dromara.common.core.exception.ServiceException 当第三方账号已被绑定时抛出异常
+     * @see com.baomidou.lock.annotation.Lock4j 分布式锁注解
      */
     @Lock4j
     public void socialRegister(AuthUser authUserData) {
@@ -101,9 +105,9 @@ public class SysLoginService {
         }
     }
 
-
     /**
      * 退出登录
+     * 清除用户登录状态，包括token和租户信息
      */
     public void logout() {
         try {
@@ -127,6 +131,7 @@ public class SysLoginService {
 
     /**
      * 记录登录信息
+     * 记录用户登录、登出等操作的日志信息
      *
      * @param tenantId 租户ID
      * @param username 用户名
@@ -145,6 +150,10 @@ public class SysLoginService {
 
     /**
      * 构建登录用户
+     * 根据用户信息构建包含权限、角色等完整信息的登录用户对象
+     *
+     * @param user 系统用户对象
+     * @return 登录用户对象
      */
     public LoginUser buildLoginUser(SysUserVo user) {
         LoginUser loginUser = new LoginUser();
@@ -168,8 +177,10 @@ public class SysLoginService {
 
     /**
      * 记录登录信息
+     * 更新用户的登录IP和登录时间
      *
      * @param userId 用户ID
+     * @param ip     登录IP地址
      */
     public void recordLoginInfo(Long userId, String ip) {
         SysUser sysUser = new SysUser();
@@ -182,6 +193,13 @@ public class SysLoginService {
 
     /**
      * 登录校验
+     * 校验用户登录状态，包括账号状态、验证码等
+     *
+     * @param loginType 登录类型
+     * @param tenantId  租户ID
+     * @param username  用户名
+     * @param supplier  校验函数
+     * @throws org.dromara.common.core.exception.user.UserException 用户校验失败时抛出异常
      */
     public void checkLogin(LoginType loginType, String tenantId, String username, Supplier<Boolean> supplier) {
         String errorKey = CacheConstants.PWD_ERR_CNT_KEY + username;
@@ -216,8 +234,14 @@ public class SysLoginService {
 
     /**
      * 校验租户
+     * 验证租户的有效性，包括租户是否存在、是否被停用、是否过期等
      *
      * @param tenantId 租户ID
+     * @throws TenantException 当出现以下情况时抛出异常:
+     *                        - tenant.number.not.blank: 租户ID为空
+     *                        - tenant.not.exists: 租户不存在
+     *                        - tenant.blocked: 租户已被停用
+     *                        - tenant.expired: 租户已过期
      */
     public void checkTenant(String tenantId) {
         if (!TenantHelper.isEnable()) {

@@ -34,9 +34,11 @@ import org.dromara.web.service.SysLoginService;
 import org.springframework.stereotype.Service;
 
 /**
- * 密码认证策略
+ * 密码认证策略实现
+ * 实现基于用户名密码的认证方式，包括验证码校验、密码匹配等功能
  *
  * @author Michelle.Chung
+ * @since 5.2.3
  */
 @Slf4j
 @Service("password" + IAuthStrategy.BASE_NAME)
@@ -47,6 +49,17 @@ public class PasswordAuthStrategy implements IAuthStrategy {
     private final SysLoginService loginService;
     private final SysUserMapper userMapper;
 
+    /**
+     * 密码登录认证
+     * 实现基于用户名密码的登录认证，包括验证码校验、密码匹配、登录状态处理等
+     *
+     * @param body   登录信息字符串
+     * @param client 授权管理视图对象
+     * @return 登录验证信息
+     * @throws org.dromara.common.core.exception.user.UserException 用户不存在、被禁用等异常
+     * @throws org.dromara.common.core.exception.user.CaptchaException 验证码错误异常
+     * @throws org.dromara.common.core.exception.user.CaptchaExpireException 验证码过期异常
+     */
     @Override
     public LoginVo login(String body, SysClientVo client) {
         PasswordLoginBody loginBody = JsonUtils.parseObject(body, PasswordLoginBody.class);
@@ -89,10 +102,14 @@ public class PasswordAuthStrategy implements IAuthStrategy {
 
     /**
      * 校验验证码
+     * 验证用户输入的验证码是否正确，包括验证码的有效性和正确性检查
      *
-     * @param username 用户名
-     * @param code     验证码
-     * @param uuid     唯一标识
+     * @param tenantId 租户ID，用于记录登录日志
+     * @param username 用户名，用于记录登录日志
+     * @param code     用户输入的验证码
+     * @param uuid     验证码唯一标识
+     * @throws CaptchaException 验证码不正确时抛出此异常
+     * @throws CaptchaExpireException 验证码已过期时抛出此异常
      */
     private void validateCaptcha(String tenantId, String username, String code, String uuid) {
         String verifyKey = GlobalConstants.CAPTCHA_CODE_KEY + StringUtils.blankToDefault(uuid, "");
@@ -108,6 +125,16 @@ public class PasswordAuthStrategy implements IAuthStrategy {
         }
     }
 
+    /**
+     * 根据用户名查询用户
+     * 查询指定用户名对应的用户信息，并验证用户状态
+     *
+     * @param username 登录用户名
+     * @return 用户信息对象 {@link SysUserVo}
+     * @throws UserException 当出现以下情况时抛出异常:
+     *                      - user.not.exists: 用户不存在
+     *                      - user.blocked: 用户已被停用
+     */
     private SysUserVo loadUserByUsername(String username) {
         SysUserVo user = userMapper.selectVoOne(new LambdaQueryWrapper<SysUser>().eq(SysUser::getUserName, username));
         if (ObjectUtil.isNull(user)) {
